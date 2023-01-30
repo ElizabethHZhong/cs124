@@ -45,9 +45,9 @@ def timer(n):
 def overflow():
     fibs = [0,1]
     #count = 2
-    for count in range(2, 10):
+    for count in range(2, 50):
         fibs.append(fibs[count-1] + fibs[count-2])
-        print(count, end="")
+        print(count, end=": ")
         print(fibs[count])
         #count += 1
     
