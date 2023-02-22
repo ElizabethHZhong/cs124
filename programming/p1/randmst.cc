@@ -6,9 +6,21 @@ using namespace std;
 #include <stdlib.h>
 #include <set>
 #include<vector>
+#include <math.h> 
 
 // define new type, "edge" (edge weight, fst endpoint, snd endpoint)
 typedef std::tuple<double, int, int> edge;
+
+void print_v(vector<edge> v) {
+    fprintf(stdout, "New Edge Vector\n");
+    for(int i=0; i < v.size(); i++) {
+        double weight = get<0>(v[i]);
+        int x = get<1>(v[i]);
+        int y = get<2>(v[i]);
+        fprintf(stdout, "(weight: %f, x: %i, y: %i) \n", weight, x, y);
+    }
+}
+
 
 /*------------------------------------------------------------------------------
                               Merge Sort with Vectors
@@ -61,95 +73,22 @@ void MergeSort(vector<edge>& v, int s, int e) {
 }
 
 /*------------------------------------------------------------------------------
-                                  Merge Sort 
-------------------------------------------------------------------------------*/
-
-// Source: https://www.geeksforgeeks.org/cpp-return-2d-array-from-function/
-
-void merge(edge array[], int const left, int const mid,
-           int const right)
-{
-    auto const subArrayOne = mid - left + 1;
-    auto const subArrayTwo = right - mid;
-  
-    // Create temp arrays
-    auto *leftArray = new edge[subArrayOne],
-         *rightArray = new edge[subArrayTwo];
-  
-    // Copy data to temp arrays leftArray[] and rightArray[]
-    for (auto i = 0; i < subArrayOne; i++)
-        leftArray[i] = array[left + i];
-    for (auto j = 0; j < subArrayTwo; j++)
-        rightArray[j] = array[mid + 1 + j];
-  
-    auto indexOfSubArrayOne
-        = 0, // Initial index of first sub-array
-        indexOfSubArrayTwo
-        = 0; // Initial index of second sub-array
-    int indexOfMergedArray
-        = left; // Initial index of merged array
-  
-    // Merge the temp arrays back into array[left..right]
-    while (indexOfSubArrayOne < subArrayOne
-           && indexOfSubArrayTwo < subArrayTwo) {
-        if (get<0>(leftArray[indexOfSubArrayOne])
-            <= get<0>(rightArray[indexOfSubArrayTwo])) {
-            array[indexOfMergedArray]
-                = leftArray[indexOfSubArrayOne];
-            indexOfSubArrayOne++;
-        }
-        else {
-            array[indexOfMergedArray]
-                = rightArray[indexOfSubArrayTwo];
-            indexOfSubArrayTwo++;
-        }
-        indexOfMergedArray++;
-    }
-    // Copy the remaining elements of
-    // left[], if there are any
-    while (indexOfSubArrayOne < subArrayOne) {
-        array[indexOfMergedArray]
-            = leftArray[indexOfSubArrayOne];
-        indexOfSubArrayOne++;
-        indexOfMergedArray++;
-    }
-    // Copy the remaining elements of
-    // right[], if there are any
-    while (indexOfSubArrayTwo < subArrayTwo) {
-        array[indexOfMergedArray]
-            = rightArray[indexOfSubArrayTwo];
-        indexOfSubArrayTwo++;
-        indexOfMergedArray++;
-    }
-    delete[] leftArray;
-    delete[] rightArray;
-}
-  
-// begin is for left index and end is
-// right index of the sub-array
-// of arr to be sorted */
-void mergeSort(edge array[], int const begin, int const end)
-{
-    if (begin >= end)
-        return; // Returns recursively
-  
-    auto mid = begin + (end - begin) / 2;
-    mergeSort(array, begin, mid);
-    mergeSort(array, mid + 1, end);
-    merge(array, begin, mid, end);
-}
-  
-// Function to print an array
-void printArray(int A[], int size)
-{
-    for (auto i = 0; i < size; i++)
-        cout << A[i] << " ";
-}
-
-/*------------------------------------------------------------------------------
                         Complete Graph Uniform between [0,1] 
 ------------------------------------------------------------------------------*/
 
+vector<edge> make_oneD_graph(int n)
+{
+    vector<edge> vect;
+    for (int i = 0; i < n; ++i) {
+        for (int j = i+1; j < n; ++j) {
+            edge edge_new = make_tuple((float) rand()/RAND_MAX, i, j);
+            vect.push_back(edge_new);
+        }
+    }
+    return vect;
+}
+
+/*
 vector<edge> make_oneD_graph(int n)
 {
     vector<edge> vect;
@@ -160,79 +99,178 @@ vector<edge> make_oneD_graph(int n)
         }
     }
     return vect;
-}
+}*/
 
 /*------------------------------------------------------------------------------
                     Complete Graph Uniform inside Unit Square 
 ------------------------------------------------------------------------------*/
 
-double** make_twoD_graph(int n)
+double distanceCalculate(tuple<double,double> n1, tuple<double,double>n2)
 {
-    double** arr = new double*[n];
-    for (int i = 0; i < n; ++i) {
-        arr[i] = new double[n];
-        for (int j = 0; j < n; ++j) {
-            arr[i][j] = (((double)rand()/(double)RAND_MAX), 
-                         ((double)rand()/(double)RAND_MAX));;
+	double x = get<0>(n1) - get<0>(n2); 
+	double y = get<1>(n1) - get<1>(n2);
+	double dist;
+
+	dist = pow(x, 2) + pow(y, 2);       
+	dist = sqrt(dist);                  
+
+	return dist;
+}
+
+vector<edge> make_twoD_graph(int n)
+{
+    vector<edge> vect;
+    tuple<double, double> arr[n];
+    for (int k = 0; k < n; ++k) {
+        arr[k] = make_tuple((double) rand()/RAND_MAX, (double) rand()/RAND_MAX);
+    }
+
+    for (int i = 1; i < n; ++i) {
+        for (int j = 0; j < i; ++j) {
+            edge edge_new = make_tuple(distanceCalculate(arr[i], arr[j]), i, j);
+            vect.push_back(edge_new);
         }
     }
-    return arr;
+    return vect;
 }
 
 /*------------------------------------------------------------------------------
                     Complete Graph Uniform inside Unit Cube
 ------------------------------------------------------------------------------*/
 
-double** make_threeD_graph(int n)
+double distanceCalculate(tuple<double,double,double> n1, tuple<double,double,double>n2)
 {
-    double** arr = new double*[n];
-    for (int i = 0; i < n; ++i) {
-        arr[i] = new double[n];
-        for (int j = 0; j < n; ++j) {
-            arr[i][j] = (((double)rand()/(double)RAND_MAX), 
-                         ((double)rand()/(double)RAND_MAX));;
+	double x = get<0>(n1) - get<0>(n2); 
+	double y = get<1>(n1) - get<1>(n2);
+	double dist;
+
+	dist = pow(x, 2) + pow(y, 2);       
+	dist = sqrt(dist);                  
+
+	return dist;
+}
+
+vector<edge> make_threeD_graph(int n)
+{
+    vector<edge> vect;
+    tuple<double, double, double> arr[n];
+    double threshold = 2.8 * pow((double)n, -0.473);
+    for (int k = 0; k < n; ++k) {
+        arr[k] = make_tuple((double) rand()/RAND_MAX, (double) rand()/RAND_MAX, 
+                            (double) rand()/RAND_MAX);
+    }
+
+    for (int i = 1; i < n; ++i) {
+        for (int j = 0; j < i; ++j) {
+            double weight = distanceCalculate(arr[i], arr[j]);
+            if(weight < threshold) {
+                edge edge_new = make_tuple(distanceCalculate(arr[i], arr[j]), i, j);
+                vect.push_back(edge_new);
+            }
         }
     }
-    return arr;
+    return vect;
+}
+
+/*******************************************************************************
+                    Complete Graph Uniform inside Hyper Cube
+*******************************************************************************/
+
+double distanceCalculate(tuple<double,double,double,double> n1, tuple<double,double,double,double>n2)
+{
+	double x = get<0>(n1) - get<0>(n2); //calculating number to square in next step
+	double y = get<1>(n1) - get<1>(n2);
+	double dist;
+
+	dist = pow(x, 2) + pow(y, 2);       //calculating Euclidean distance
+	dist = sqrt(dist);                  
+
+	return dist;
+}
+
+vector<edge> make_fourD_graph(int n)
+{
+    double threshold = 2.54 * pow((double)n, -0.458);
+    vector<edge> vect;
+    tuple<double, double, double,double> arr[n];
+    for (int k = 0; k < n; ++k) {
+        arr[k] = make_tuple((double) rand()/RAND_MAX, (double) rand()/RAND_MAX, 
+                            (double) rand()/RAND_MAX, (double) rand()/RAND_MAX);
+    }
+
+    for (int i = 1; i < n; ++i) {
+        for (int j = 0; j < i; ++j) {
+            double weight = distanceCalculate(arr[i], arr[j]);
+            if(weight < threshold) {
+                edge edge_new = make_tuple(distanceCalculate(arr[i], arr[j]), i, j);
+                vect.push_back(edge_new);
+            }
+        }
+    }
+    return vect;
 }
 
 /*------------------------------------------------------------------------------
                                  Kruskal's Algorithm
 ------------------------------------------------------------------------------*/
 
-double kruskal(vector<edge>& edges, int n) {
-    MergeSort(edges, 0, n); // sort edges from least to greatest weight
+tuple<double, double> kruskal(vector<edge>& edges, int n) {
+    MergeSort(edges, 0, edges.size()-1); // sort edges from least to greatest weight
 
     set<int> s = {}; // set of vertices in the MST
-    int sum = 0; // accumulator for sum of weigths in the MST
+    double sum = 0.; // accumulator for sum of weigths in the MST
     int index = 0; // keep track of edges already visited
+    double max_edge = 0.;
     
     // keep adding edges until all vertices are in the MST
-    while(s.size() < n) {
+    while(s.size() < n && index < edges.size()) {
         bool add_edge = false;
         int i = get<1>(edges[index]);
         int j = get<2>(edges[index]);
-        if(s.find(i) != s.end()) {
+
+        // add endpoint if they are not in s
+        if(s.find(i) == s.end()) {
             add_edge = true;
             s.insert(i);
         }
-        if(s.find(j) != s.end()) {
+        if(s.find(j) == s.end()) {
             add_edge = true;
             s.insert(j);
         }
-        if(add_edge) {
+
+        // add edge weight accordingly
+        if(add_edge == true) {
+            double curr_edge_weight = get<0>(edges[index]);
             sum += get<0>(edges[index]);
+            if(curr_edge_weight > max_edge) {
+                max_edge = curr_edge_weight;
+            }
         }
         index++;
     }
-    return sum;
+    return make_tuple(sum, max_edge);
 }
 
 /*------------------------------------------------------------------------------
                             Testing Pruning Upper Bound
 ------------------------------------------------------------------------------*/
 
-// Insert here
+double tpn = 5.; //trials per n value
+int min_pow = 7;
+int cap_pow = 13; // maximum power of 2 we test
+
+void testing_max() {
+    for(int exp = min_pow; exp <= cap_pow; exp++) {
+        double avg_max = 0;
+        double n = pow(2., exp);
+        for(int i = 0; i < tpn; i++) {
+            vector<edge> v = make_fourD_graph(n);
+            avg_max += get<1>(kruskal(v, n));
+        }
+        avg_max /= tpn;
+        fprintf(stdout, "n: %f, avg_max: %f\n", n, avg_max);
+    }
+}
 
 /*******************************************************************************
                                     Main 
@@ -249,5 +287,17 @@ int main(int argc, char* argv[])
     int n = stoi(argv[2]);
     int trials = stoi(argv[3]);
     int dim = stoi(argv[4]);
+
+
+    fprintf(stdout, "n: %i trials: %i dim: %i\n", n, trials, dim);
+
+    /*
+    for(int i = 1; i < 15; i++) {
+        vector<edge> v = make_oneD_graph(pow(2, i));
+        fprintf(stdout, "n: 2^%i, max weight: %f\n", i, get<1>(kruskal(v, 128)));
+    } */
+
+    testing_max();
+    
 }
 
