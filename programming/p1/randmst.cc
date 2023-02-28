@@ -7,20 +7,11 @@ using namespace std;
 #include <set>
 #include<vector>
 #include <math.h> 
+using namespace std::chrono;
+#include <unordered_set>
 
 // define new type, "edge" (edge weight, fst endpoint, snd endpoint)
 typedef std::tuple<double, int, int> edge;
-
-void print_v(vector<edge> v) {
-    fprintf(stdout, "New Edge Vector\n");
-    for(int i=0; i < v.size(); i++) {
-        double weight = get<0>(v[i]);
-        int x = get<1>(v[i]);
-        int y = get<2>(v[i]);
-        fprintf(stdout, "(weight: %f, x: %i, y: %i) \n", weight, x, y);
-    }
-}
-
 
 /*------------------------------------------------------------------------------
                               Merge Sort with Vectors
@@ -72,39 +63,129 @@ void MergeSort(vector<edge>& v, int s, int e) {
 	}
 }
 
+void print_v(vector<edge> v) {
+    fprintf(stdout, "New Edge Vector\n");
+    for(int i=0; i < v.size(); i++) {
+        double weight = get<0>(v[i]);
+        int x = get<1>(v[i]);
+        int y = get<2>(v[i]);
+        fprintf(stdout, "(weight: %f, x: %i, y: %i) \n", weight, x, y);
+    }
+}
+
+
+/*------------------------------------------------------------------------------
+                              Disjoint Set Class
+------------------------------------------------------------------------------*/
+
+class Disjoint {
+    public:
+        vector<int> parent;
+        vector<int> rank;
+    
+    // constructor
+    Disjoint(int n){
+        parent = vector<int>(n);
+        rank = vector<int>(n);
+    }
+
+    // makeset
+    void makeset(int x) {
+        parent[x] = x;
+        rank[x] = 0;
+    }
+
+    // find
+    int find(int x) {
+        while (x != parent[x]){
+            x = parent[x];
+        }
+        return x;
+    }
+
+    // union
+    void union_d(int x, int y) {
+        int r_x = find(x);
+        int r_y = find(y);
+        if (r_x == r_y) {
+            return;
+        }
+        if(rank[r_x] > rank[r_y]) {
+            parent[r_y] = r_x;
+        } else {
+            parent[r_x] = r_y;
+            if(rank[r_x] == rank[r_y]) {
+                rank[r_y] += 1;
+            }
+        }
+    }
+};
+
+/*------------------------------------------------------------------------------
+                               Kruskal's Algorithm
+------------------------------------------------------------------------------*/
+
+tuple<double, double> kruskal(vector<edge>& edges, int n) {
+    // create disjoint set
+    Disjoint Set = Disjoint(n);
+    for (int i = 0; i < n; i++) {
+        Set.makeset(i);
+    }
+
+    // keep track of weighted edge sum and max edge
+    double sum = 0;
+    double max_edge = 0;
+
+    // sort edges from least to greatest weight
+    MergeSort(edges, 0, edges.size()-1); 
+
+    // loop through edges to add to MST
+    for(int i = 0; i < edges.size(); i++) {
+        int a = get<1>(edges[i]);
+        int b = get<2>(edges[i]);
+        if(Set.find(a) != Set.find(b)) {
+            double weight = get<0>(edges[i]);
+            sum += weight;
+            Set.union_d(a, b);
+            if(weight > max_edge) {
+                max_edge = weight;
+            }
+        }
+    }
+
+    // returns a tuple of the edge weight sum and max edge (for pruning)
+    return make_tuple(sum, max_edge);
+};
+
+
 /*------------------------------------------------------------------------------
                         Complete Graph Uniform between [0,1] 
 ------------------------------------------------------------------------------*/
 
+// create a list of edges for 1D graph (pruning along the way)
 vector<edge> make_oneD_graph(int n)
 {
+    // pruning threshold
+    double threshold = 3.156 * pow((double)n, -0.847);
     vector<edge> vect;
     for (int i = 0; i < n; ++i) {
         for (int j = i+1; j < n; ++j) {
-            edge edge_new = make_tuple((float) rand()/RAND_MAX, i, j);
-            vect.push_back(edge_new);
+            double weight = (float) rand()/RAND_MAX;
+            if (weight < threshold) {
+                edge edge_new = make_tuple(weight, i, j);
+                vect.push_back(edge_new);
+            }
         }
     }
     return vect;
 }
 
-/*
-vector<edge> make_oneD_graph(int n)
-{
-    vector<edge> vect;
-    for (int i = 0; i < n; ++i) {
-        for (int j = i; j < n; ++j) {
-            edge edge_new = make_tuple((float) rand()/RAND_MAX, i, j);
-            vect.push_back(edge_new);
-        }
-    }
-    return vect;
-}*/
 
 /*------------------------------------------------------------------------------
                     Complete Graph Uniform inside Unit Square 
 ------------------------------------------------------------------------------*/
 
+// calculate distance between 2 points in 2D
 double distanceCalculate(tuple<double,double> n1, tuple<double,double>n2)
 {
 	double x = get<0>(n1) - get<0>(n2); 
@@ -117,8 +198,12 @@ double distanceCalculate(tuple<double,double> n1, tuple<double,double>n2)
 	return dist;
 }
 
+// create a list of edges for 2D graph (pruning along the way)
 vector<edge> make_twoD_graph(int n)
 {
+    // pruning threshold
+    double threshold = 1.776 * pow((double) n, -0.478); 
+
     vector<edge> vect;
     tuple<double, double> arr[n];
     for (int k = 0; k < n; ++k) {
@@ -127,82 +212,53 @@ vector<edge> make_twoD_graph(int n)
 
     for (int i = 1; i < n; ++i) {
         for (int j = 0; j < i; ++j) {
-            edge edge_new = make_tuple(distanceCalculate(arr[i], arr[j]), i, j);
-            vect.push_back(edge_new);
+            double weight = distanceCalculate(arr[i], arr[j]);
+            if (weight < threshold) {
+                edge edge_new = make_tuple(weight, i, j);
+                vect.push_back(edge_new);
+            }
         }
     }
     return vect;
 }
+
 
 /*------------------------------------------------------------------------------
                     Complete Graph Uniform inside Unit Cube
 ------------------------------------------------------------------------------*/
 
-double distanceCalculate(tuple<double,double,double> n1, tuple<double,double,double>n2)
+// calculate distance between 2 points in 3D
+double threeDistanceCalculate(tuple<double,double,double> n1, tuple<double,double,double>n2)
 {
 	double x = get<0>(n1) - get<0>(n2); 
 	double y = get<1>(n1) - get<1>(n2);
+    double z = get<2>(n1) - get<2>(n2);
 	double dist;
 
-	dist = pow(x, 2) + pow(y, 2);       
+	dist = pow(x, 2) + pow(y, 2) + pow(z, 2);       
 	dist = sqrt(dist);                  
 
 	return dist;
 }
 
+// create a list of edges for 3D graph (pruning along the way)
 vector<edge> make_threeD_graph(int n)
 {
     vector<edge> vect;
     tuple<double, double, double> arr[n];
-    double threshold = 2.8 * pow((double)n, -0.473);
     for (int k = 0; k < n; ++k) {
-        arr[k] = make_tuple((double) rand()/RAND_MAX, (double) rand()/RAND_MAX, 
+        arr[k] = make_tuple((double) rand()/RAND_MAX, 
+                            (double) rand()/RAND_MAX, 
                             (double) rand()/RAND_MAX);
     }
 
-    for (int i = 1; i < n; ++i) {
-        for (int j = 0; j < i; ++j) {
-            double weight = distanceCalculate(arr[i], arr[j]);
+    // pruning threshold
+    double threshold = 1.644 * pow((double)n, -0.327); 
+    for (int i = 0; i < n; ++i) {
+        for (int j = i+1; j < n; ++j) {
+            double weight = threeDistanceCalculate(arr[i], arr[j]);
             if(weight < threshold) {
-                edge edge_new = make_tuple(distanceCalculate(arr[i], arr[j]), i, j);
-                vect.push_back(edge_new);
-            }
-        }
-    }
-    return vect;
-}
-
-/*******************************************************************************
-                    Complete Graph Uniform inside Hyper Cube
-*******************************************************************************/
-
-double distanceCalculate(tuple<double,double,double,double> n1, tuple<double,double,double,double>n2)
-{
-	double x = get<0>(n1) - get<0>(n2); //calculating number to square in next step
-	double y = get<1>(n1) - get<1>(n2);
-	double dist;
-
-	dist = pow(x, 2) + pow(y, 2);       //calculating Euclidean distance
-	dist = sqrt(dist);                  
-
-	return dist;
-}
-
-vector<edge> make_fourD_graph(int n)
-{
-    double threshold = 2.54 * pow((double)n, -0.458);
-    vector<edge> vect;
-    tuple<double, double, double,double> arr[n];
-    for (int k = 0; k < n; ++k) {
-        arr[k] = make_tuple((double) rand()/RAND_MAX, (double) rand()/RAND_MAX, 
-                            (double) rand()/RAND_MAX, (double) rand()/RAND_MAX);
-    }
-
-    for (int i = 1; i < n; ++i) {
-        for (int j = 0; j < i; ++j) {
-            double weight = distanceCalculate(arr[i], arr[j]);
-            if(weight < threshold) {
-                edge edge_new = make_tuple(distanceCalculate(arr[i], arr[j]), i, j);
+                edge edge_new = make_tuple(threeDistanceCalculate(arr[i], arr[j]), i, j);
                 vect.push_back(edge_new);
             }
         }
@@ -211,55 +267,63 @@ vector<edge> make_fourD_graph(int n)
 }
 
 /*------------------------------------------------------------------------------
-                                 Kruskal's Algorithm
+                    Complete Graph Uniform inside Hyper Cube
 ------------------------------------------------------------------------------*/
 
-tuple<double, double> kruskal(vector<edge>& edges, int n) {
-    MergeSort(edges, 0, edges.size()-1); // sort edges from least to greatest weight
+// calculate distance between 2 points in 4D
+double fourDistanceCalculate(tuple<double,double,double,double> n1, tuple<double,double,double,double>n2)
+{
+    //calculating number to square in next step
+	double x = get<0>(n1) - get<0>(n2); 
+	double y = get<1>(n1) - get<1>(n2);
+    double w = get<2>(n1) - get<2>(n2);
+    double z = get<3>(n1) - get<3>(n2);
+	double dist;
 
-    set<int> s = {}; // set of vertices in the MST
-    double sum = 0.; // accumulator for sum of weigths in the MST
-    int index = 0; // keep track of edges already visited
-    double max_edge = 0.;
-    
-    // keep adding edges until all vertices are in the MST
-    while(s.size() < n && index < edges.size()) {
-        bool add_edge = false;
-        int i = get<1>(edges[index]);
-        int j = get<2>(edges[index]);
+    //calculating Euclidean distance
+	dist = pow(x, 2) + pow(y, 2) + pow(w, 2) + pow(z, 2);       
+	dist = sqrt(dist);                  
 
-        // add endpoint if they are not in s
-        if(s.find(i) == s.end()) {
-            add_edge = true;
-            s.insert(i);
-        }
-        if(s.find(j) == s.end()) {
-            add_edge = true;
-            s.insert(j);
-        }
+	return dist;
+}
 
-        // add edge weight accordingly
-        if(add_edge == true) {
-            double curr_edge_weight = get<0>(edges[index]);
-            sum += get<0>(edges[index]);
-            if(curr_edge_weight > max_edge) {
-                max_edge = curr_edge_weight;
+// create a list of edges for 4D graph (pruning along the way)
+vector<edge> make_fourD_graph(int n)
+{
+    vector<edge> vect;
+    tuple<double, double, double, double> arr[n];
+    for (int k = 0; k < n; ++k) {
+        arr[k] = make_tuple((double) rand()/RAND_MAX, 
+                            (double) rand()/RAND_MAX, 
+                            (double) rand()/RAND_MAX, 
+                            (double) rand()/RAND_MAX);
+    }
+
+    // pruning threshold
+    double threshold = 1.524 * pow((double)n, -0.458);
+    for (int i = 0; i < n; ++i) {
+        for (int j = i+1; j < n; ++j) {
+            double weight = fourDistanceCalculate(arr[i], arr[j]);
+            if(weight < threshold) {
+                edge edge_new = make_tuple(fourDistanceCalculate(arr[i], arr[j]), i, j);
+                vect.push_back(edge_new);
             }
         }
-        index++;
     }
-    return make_tuple(sum, max_edge);
+    return vect;
 }
 
 /*------------------------------------------------------------------------------
                             Testing Pruning Upper Bound
 ------------------------------------------------------------------------------*/
 
-double tpn = 5.; //trials per n value
-int min_pow = 7;
-int cap_pow = 13; // maximum power of 2 we test
-
+// Testing the maximum weighted edge of a graph
 void testing_max() {
+    double tpn = 5.; //trials per n value
+    int min_pow = 7; // minimum power of 2 we test
+    int cap_pow = 12; // maximum power of 2 we test
+    
+    // run trials
     for(int exp = min_pow; exp <= cap_pow; exp++) {
         double avg_max = 0;
         double n = pow(2., exp);
@@ -270,6 +334,62 @@ void testing_max() {
         avg_max /= tpn;
         fprintf(stdout, "n: %f, avg_max: %f\n", n, avg_max);
     }
+}
+
+
+/*------------------------------------------------------------------------------
+                                    Run Trials
+------------------------------------------------------------------------------*/
+
+// Run trials for n = 2^j where 7 <= j <= 18
+void run_trials() {
+    double tpn = 5.; //trials per n value
+    int min_pow = 18; // minimum power of 2 we test
+    int cap_pow = 18; // maximum power of 2 we test
+
+    // run trials
+    for(int exp = min_pow; exp <= cap_pow; exp++) {
+        double avg_sum = 0;
+        double n = pow(2., exp);
+        double av_duration = 0.;
+        fprintf(stdout, "Start %f\n", n);
+        for(int i = 0; i < tpn; i++) {
+            auto start = high_resolution_clock::now();
+            vector<edge> v = make_fourD_graph(n);
+            avg_sum += get<0>(kruskal(v, n));
+            auto stop = high_resolution_clock::now();
+            auto duration = duration_cast<milliseconds>(stop - start);
+            av_duration += duration.count();
+        }
+        av_duration /= tpn;
+        avg_sum /= tpn;
+        fprintf(stdout, "n: %f, avg_sum: %f, av_duration: %f\n",  
+                n, avg_sum, av_duration);
+    }
+}
+
+/*------------------------------------------------------------------------------
+                                Run Specified Trial
+------------------------------------------------------------------------------*/
+
+void run(int n, int trials, int dim) {
+    fprintf(stdout, "n = %i, trials = %i, dim = %i\n", n, trials, dim);
+    double avg_sum = 0;
+    for(int i = 0; i < trials; i++) {
+        vector<edge> v;
+        if(dim == 1) {
+            v = make_oneD_graph(n);
+        } else if(dim == 2) {
+            v = make_twoD_graph(n);
+        } else if(dim == 3) {
+            v = make_threeD_graph(n);
+        } else if(dim == 4) {
+            v = make_fourD_graph(n);
+        }
+        avg_sum += get<0>(kruskal(v, n));
+    }
+    avg_sum /= trials;
+    fprintf(stdout, "Average Tree Size: %f\n", avg_sum);
 }
 
 /*******************************************************************************
@@ -288,16 +408,5 @@ int main(int argc, char* argv[])
     int trials = stoi(argv[3]);
     int dim = stoi(argv[4]);
 
-
-    fprintf(stdout, "n: %i trials: %i dim: %i\n", n, trials, dim);
-
-    /*
-    for(int i = 1; i < 15; i++) {
-        vector<edge> v = make_oneD_graph(pow(2, i));
-        fprintf(stdout, "n: 2^%i, max weight: %f\n", i, get<1>(kruskal(v, 128)));
-    } */
-
-    testing_max();
-    
+    run(n, trials, dim);
 }
-
