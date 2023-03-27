@@ -1,14 +1,17 @@
-# CS124 Programming 2 Assignment
-# Helen Xiao and Elizabeth Zhong
-
+#...............................................................................
+#                         CS124 Programming 2 Assignment
+#                         Helen Xiao and Elizabeth Zhong
+#...............................................................................
 import numpy as np
 from random import randint
 import time as time
 import matplotlib.pyplot as plt
 
-n_0 = 1
+#...............................................................................
+#                             Part 2 - Strassen Trials
+#...............................................................................
 
-# helper matrix multiplication
+# Conventional Matrix Multiplication
 def mat_mul(m1, m2):
     n = len(m1)
     result = np.array([[0]*n]*n)
@@ -17,9 +20,8 @@ def mat_mul(m1, m2):
             result[r][c] = np.dot(m1[r], m2[ :,c])
     return result
 
-
-# strassen algorithm
-def strassen(m1, m2):
+# Strassen's Algorithm
+def strassen(m1, m2, n_0):
     padded = False
     n = len(m1)
     if n <= n_0:
@@ -75,7 +77,8 @@ def strassen(m1, m2):
     # return result
     return result
 
-# generate matrices
+
+# Binary Matrix Generator
 def gen_mat(n):
     result = np.zeros((n, n), dtype=int)
     for r in range(n):
@@ -83,8 +86,16 @@ def gen_mat(n):
             result[r][c] = randint(0, 1)
     return result
 
+# Run and Plot Trials
+def run_strassen(exp):
+    n_0 = 2
+    n = 2 ** exp
+    strassen_times = [0]*n
+    m1 = gen_mat(n)
+    m2 = gen_mat(n)
+    for i in range(n_0):
+        exp *= 2
 
-# Trials
 def run_trials(n):
     count = [0]*n
     strassen_times = [0]*n
@@ -113,4 +124,28 @@ def run_trials(n):
     plt.show()
 
 run_trials(50)
+
+#...............................................................................
+#                                Part 3 - Triangles
+#...............................................................................
+
+# Undirected Adjacency Matrix Generator
+def gen_adj_mat(n):
+    result = np.zeros((n, n), dtype=int)
+    for r in range(n):
+        for c in range(r+1, n):
+            result[r][c] = randint(0, 1)
+            result[c][r] = result[r][c]
+    return result
+
+# Triangle Calculator
+def triangle(a):
+    n = len(a)
+    a_3 = strassen(strassen(a, a), a)
+    print(a_3)
+    num = 0
+    for i in range(n):
+        num += a_3[i][i]
+    return num // 6
+
 
