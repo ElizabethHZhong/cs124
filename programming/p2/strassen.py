@@ -4,9 +4,9 @@
 #...............................................................................
 import sys
 import numpy as np
-from random import randint, uniform
-import time as time
-import matplotlib.pyplot as plt
+#from random import randint, uniform
+#import time as time
+#import matplotlib.pyplot as plt
 
 #...............................................................................
 #                             Part 2 - Strassen Trials
@@ -75,7 +75,7 @@ def strassen(m1, m2, n_0):
         result = np.split(result, [n-1], axis = 0)[0]
     # return result
     return result
-
+"""
 # Binary Matrix Generator
 def gen_mat(n):
     result = np.zeros((n, n), dtype=int)
@@ -115,11 +115,11 @@ def run_trials(n):
     plt.ylabel("Average time taken (s)")
     plt.title("Optimal k for Strassen")
     plt.show()
-
+"""
 #...............................................................................
 #                                Part 3 - Triangles
 #...............................................................................
-
+"""
 # random bernoulli generator
 def bern(p):
     if uniform(0, 1) < p:
@@ -155,7 +155,7 @@ def run_triangle(n):
             avg_tri += triangle(m)
         avg_tri /= num_trials
         print("n =", n, "p =", p, "Average Triangle:", avg_tri)
-
+"""
 #...............................................................................
 #                                      Main
 #...............................................................................
