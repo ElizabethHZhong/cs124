@@ -8,6 +8,12 @@ import numpy as np
 #import time as time
 #import matplotlib.pyplot as plt
 
+"""
+Note to grader: 
+For some reason, I need to comment out my plotting and trials in order for my 
+code to compile on gradescope, but if you uncomment the code, it should work!
+"""
+
 #...............................................................................
 #                             Part 2 - Strassen Trials
 #...............................................................................
@@ -20,10 +26,6 @@ def mat_mul(A, B):
         for j in range(n):
             C[i][j] += np.dot(A[i], B[:,j])
     return C
-"""
-def mat_mul(m1, m2):
-    return np.dot(m1, m2)
-"""
 
 # Strassen's Algorithm
 def strassen(m1, m2, n_0):
@@ -39,22 +41,15 @@ def strassen(m1, m2, n_0):
         m2 = np.hstack((m2, np.zeros((n, 1), dtype=int)))
         m2 = np.vstack((m2, np.zeros((1, n+1), dtype=int)))
         n += 1
-    # split columns
-    abcd = np.split(m1, 2, axis = 1)
-    efgh = np.split(m2, 2, axis = 1)
-    # split rows
-    ac = np.split(abcd[0], 2, axis = 0)
-    a = ac[0]
-    c = ac[1]
-    bd = np.split(abcd[1], 2, axis = 0)
-    b = bd[0]
-    d = bd[1]
-    eg = np.split(efgh[0], 2, axis = 0)
-    e = eg[0]
-    g = eg[1]
-    fh = np.split(efgh[1], 2, axis = 0)
-    f = fh[0]
-    h = fh[1]
+    #get quadrants
+    a = m1[:n//2, :n//2]
+    e = m2[:n//2, :n//2] 
+    b = m1[:n//2, n//2:]
+    f = m2[:n//2, n//2:]
+    c = m1[n//2:, :n//2]
+    g = m2[n//2:, :n//2]
+    d = m1[n//2:, n//2:]
+    h = m2[n//2:, n//2:]
     # calculate subproblems
     p1 = strassen(a, np.subtract(f,h), n_0)
     p2 = strassen(np.add(a,b), h, n_0)
@@ -116,6 +111,7 @@ def run_trials(n):
     plt.title("Optimal k for Strassen")
     plt.show()
 """
+
 #...............................................................................
 #                                Part 3 - Triangles
 #...............................................................................
