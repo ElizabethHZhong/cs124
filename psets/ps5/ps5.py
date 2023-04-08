@@ -26,9 +26,9 @@ def fpp_n(k, n):
     print("k:", k, "n:", n, "m:", m)
     print("FPP:", fpp, "Expected:", m * fpp)
 
-#fpp_n(5, 1000)
-#fpp_n(5, 10000)
-#fpp_n(5, 100000)
+fpp_p(5, 1000)
+fpp_p(5, 10000)
+fpp_p(5, 100000)
 
 p = 1249
 P = [3,1,4,1,5,9,2,6]
@@ -55,14 +55,16 @@ def compare(p, P, D):
     hashed_p = hashed(P, k, p)
     for i in range(n-k+1):
         if hashed_p == hash[i]:
+            print(P, "vs.", D[i: i+k])
             found = True
             for j in range(k):  
                 curr_p = P[j]
                 curr_d = D[i + j]
-                print(count, "Comparing P[i]:", curr_p, "and D[", j + i, "]:", curr_d)
+                print(count, "Comparing P[", j, "]:", curr_p, "and D[", j + i, "]:", curr_d)
                 count += 1
                 if curr_p != curr_d:
                     print("Not a match")
+                    print()
                     found = False
                     break
                 else:
@@ -71,7 +73,7 @@ def compare(p, P, D):
                 print("Full match!")
                 break
 
-compare(p, P, D)
+#compare(p, P, D)
 
 
 
