@@ -116,7 +116,7 @@ def timing(n):
     end = time.time()
     print(end - start)
 
-timing(2**(300000))
+#timing(2**(300000))
 
 def one_min():
     timeout = time.time() + 60
@@ -165,4 +165,4 @@ def plot(times):
     plt.show()
 
 
-#plot(time_graph(10**3))
+plot(time_graph(10**3))

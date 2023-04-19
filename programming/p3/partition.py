@@ -6,6 +6,10 @@ import sys
 from heapq import heappop, heappush, heapify
 from random import randint, uniform, choice
 from math import exp, floor
+import time as time
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
 #...............................................................................
 #                             Karmarkar-Karp Algorithm
@@ -190,6 +194,26 @@ def pre_annealing(a, m):
 #                                50 Random Instances
 #...............................................................................
 
+MAX_ITER = 25000
+max_num = 10 ** 12
+
+def gen_a(n):
+    return [randint(1, max_num) for i in range(n)]
+
+functions = [repeated, hill, annealing, pre_repeated, pre_hill, pre_annealing]
+
+def graph(f, n, l):
+    print("Function", f.__name__)
+    d = pd.DataFrame(columns=["Residue"])
+    for i in range(n):
+        print("Instance", i)
+        a = gen_a(l)
+        row_dict = {"Residue" : [f(a, MAX_ITER)]}
+        row = pd.DataFrame.from_dict(row_dict)
+        d = pd.concat([d, row])
+    sns.histplot(data=d, x="Residue")
+    plt.title("Residue Histogram for " + str(f.__name__))
+    plt.show()
 
 
 #...............................................................................
@@ -200,6 +224,7 @@ def main():
     n = len(sys.argv)
     if n != 4:
         sys.exit("Usage: python3 partition.py flag algorithm inputfile")
+    flag = int(sys.argv[1].strip())
     alg = int(sys.argv[2].strip())
     input = open(sys.argv[3], "r")
     lines = input.readlines()
@@ -211,21 +236,42 @@ def main():
     for i in range(n):
         a[i] = int(lines[i].strip())
 
-    if alg == 0:
-        print(kk(a))
-    elif alg == 1:
-        print(repeated(a, max_iter))
-    elif alg == 2:
-        print(hill(a, max_iter))
-    elif alg == 3:
-        print(annealing(a, max_iter))
-    elif alg == 11:
-        print(pre_repeated(a, max_iter))
-    elif alg == 12:
-        print(pre_hill(a, max_iter))
-    elif alg == 13:
-        print(pre_annealing(a, max_iter))
-    else:
-        print("Not a valid algorithm")
+    instances = 50
+    arr_size = 100
+
+    if flag == 0:
+        if alg == 0:
+            print(kk(a))
+        elif alg == 1:
+            print(repeated(a, max_iter))
+        elif alg == 2:
+            print(hill(a, max_iter))
+        elif alg == 3:
+            print(annealing(a, max_iter))
+        elif alg == 11:
+            print(pre_repeated(a, max_iter))
+        elif alg == 12:
+            print(pre_hill(a, max_iter))
+        elif alg == 13:
+            print(pre_annealing(a, max_iter))
+        else:
+            print("Not a valid algorithm")
+    elif flag == 1:
+        if alg == 0:
+            print("Not a valid function to graph")
+        elif alg == 1:
+            graph(repeated, instances, arr_size)
+        elif alg == 2:
+            graph(hill, instances, arr_size)
+        elif alg == 3:
+            graph(annealing, instances, arr_size)
+        elif alg == 11:
+            graph(pre_repeated, instances, arr_size)
+        elif alg == 12:
+            graph(pre_hill, instances, arr_size)
+        elif alg == 13:
+            graph(pre_annealing, instances, arr_size)
+        else:
+            print("Not a valid algorithm to graph")
 
 main()
