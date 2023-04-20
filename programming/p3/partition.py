@@ -10,6 +10,7 @@ import time as time
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import numpy as np
 
 #...............................................................................
 #                             Karmarkar-Karp Algorithm
@@ -200,20 +201,95 @@ max_num = 10 ** 12
 def gen_a(n):
     return [randint(1, max_num) for i in range(n)]
 
-functions = [repeated, hill, annealing, pre_repeated, pre_hill, pre_annealing]
+def graph(functions, n, l, arr):
+    for f in functions:
+        print("Function", f.__name__)
+        d = pd.DataFrame(columns=["Residue"])
+        for i in range(n):
+            print("Instance", i)
+            a = arr[i]
+            row_dict = {"Residue" : [f(a, MAX_ITER)]}
+            row = pd.DataFrame.from_dict(row_dict)
+            d = pd.concat([d, row])
+        sns.histplot(data=d, x="Residue")
+        plt.title("Residue Histogram for " + str(f.__name__))
+        plt.show()
 
-def graph(f, n, l):
-    print("Function", f.__name__)
+def graph_scatter(functions, n, arr):
+    d = pd.DataFrame(columns=["Residue", "Function"])
+    for i in range(n):
+        print("Instance", i)
+        for f in functions:
+            a = arr[i]
+            res = f(a, MAX_ITER)
+            print("Function", f.__name__, res)
+            row_dict = {"Residue" : [res],
+                        "Function" : [f.__name__]}
+            row = pd.DataFrame.from_dict(row_dict)
+            d = pd.concat([d, row])
+        print("KK")
+        a = arr[i]
+        row_dict = {"Residue" : [kk(a)],
+                    "Function" : ["KK"]}
+        row = pd.DataFrame.from_dict(row_dict)
+        d = pd.concat([d, row])
+    #d.to_csv('timing-data.csv')
+    fig, ax = plt.subplots()
+    sns.stripplot(data=d, x="Function", y="Residue", hue="Function", ax=ax)
+    fig.set_figwidth(12)
+    fig.set_figheight(6)
+    ax.set_yscale('log')
+    ax.set_title("Residue Scatterplot")
+    plt.savefig('egg.png')
+
+def graph_kk(n, l, arr):
+    print("Function Karmarkar-Karp")
     d = pd.DataFrame(columns=["Residue"])
     for i in range(n):
         print("Instance", i)
-        a = gen_a(l)
-        row_dict = {"Residue" : [f(a, MAX_ITER)]}
+        a = arr[i]
+        row_dict = {"Residue" : [kk(a)]}
         row = pd.DataFrame.from_dict(row_dict)
         d = pd.concat([d, row])
     sns.histplot(data=d, x="Residue")
-    plt.title("Residue Histogram for " + str(f.__name__))
+    plt.title("Residue Histogram for Karmarkar-Karp")
     plt.show()
+
+def graph_time(functions, trials, nmax):
+    times = pd.DataFrame(columns=["n", "Time", "Function"])
+    for j in range(1, nmax+1):
+        n = 2 ** j
+        print(n)
+        arrs = [gen_a(n) for _ in range(trials)]
+        for f in functions:
+            print(f.__name__)
+            times_to_avg = []
+            for i in range(trials):
+                start = time.time()
+                f(arrs[i], MAX_ITER)
+                elapsed = time.time() - start
+                times_to_avg.append(elapsed)
+            row_dict = {"n" : [n],
+                        "Time" : [np.mean(times_to_avg)],
+                        "Function" : [f.__name__]}
+            row = pd.DataFrame.from_dict(row_dict)
+            times = pd.concat([times, row])
+        print("KK")
+        times_to_avg = []
+        for i in range(trials):
+            start = time.time()
+            kk(arrs[i])
+            elapsed = time.time() - start
+            times_to_avg.append(elapsed)
+        row_dict = {"n" : [n],
+                    "Time" : [np.mean(times_to_avg)],
+                    "Function" : [kk.__name__]}
+        row = pd.DataFrame.from_dict(row_dict)
+        times = pd.concat([times, row])
+    sns.lineplot(data=times, x="n", y="Time", hue="Function")
+    plt.title("Average Runtime per Function")
+    plt.show()
+    
 
 
 #...............................................................................
@@ -238,6 +314,11 @@ def main():
 
     instances = 50
     arr_size = 100
+    arrs = [gen_a(arr_size) for i in range(instances)]
+    functions = [repeated, hill, annealing, 
+                 pre_repeated, pre_hill, pre_annealing]
+    trials = 25
+    nmax = 7
 
     if flag == 0:
         if alg == 0:
@@ -257,21 +338,12 @@ def main():
         else:
             print("Not a valid algorithm")
     elif flag == 1:
-        if alg == 0:
-            print("Not a valid function to graph")
-        elif alg == 1:
-            graph(repeated, instances, arr_size)
-        elif alg == 2:
-            graph(hill, instances, arr_size)
-        elif alg == 3:
-            graph(annealing, instances, arr_size)
-        elif alg == 11:
-            graph(pre_repeated, instances, arr_size)
-        elif alg == 12:
-            graph(pre_hill, instances, arr_size)
-        elif alg == 13:
-            graph(pre_annealing, instances, arr_size)
-        else:
-            print("Not a valid algorithm to graph")
+        graph_kk(instances, arr_size, arrs)
+        graph(functions, instances, arr_size, arrs)
+    elif flag == 2:
+        graph_time(functions, trials, nmax)
+    elif flag == 3:
+        graph_scatter(functions, instances, arrs)
+
 
 main()
