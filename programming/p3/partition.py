@@ -6,11 +6,13 @@ import sys
 from heapq import heappop, heappush, heapify
 from random import randint, uniform, choice
 from math import exp, floor
+"""
 import time as time
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import numpy as np
+"""
 
 #...............................................................................
 #                             Karmarkar-Karp Algorithm
@@ -194,7 +196,7 @@ def pre_annealing(a, m):
 #...............................................................................
 #                                50 Random Instances
 #...............................................................................
-
+"""
 MAX_ITER = 25000
 max_num = 10 ** 12
 
@@ -289,7 +291,34 @@ def graph_time(functions, trials, nmax):
     sns.lineplot(data=times, x="n", y="Time", hue="Function")
     plt.title("Average Runtime per Function")
     plt.show()
-    
+
+def print_times(functions):
+    trials = 15
+    arr_size = 100
+    arrs = [gen_a(arr_size) for i in range(trials)]
+    for f in functions:
+            times_to_avg = []
+            for i in range(trials):
+                start = time.time()
+                f(arrs[i], MAX_ITER)
+                elapsed = time.time() - start
+                times_to_avg.append(elapsed)
+            print("Function", f.__name__, "Avg Time: ", np.mean(times_to_avg))
+
+def print_kk_time():
+    trials = 15
+    arr_size = 100
+    arrs = [gen_a(arr_size) for i in range(trials)]
+    times_to_avg = []
+    for i in range(trials):
+        start = time.time()
+        kk(arrs[i])
+        elapsed = time.time() - start
+        times_to_avg.append(elapsed)
+    print("Function KK, Avg Time: ", np.mean(times_to_avg))
+
+"""
+
 
 
 #...............................................................................
@@ -312,6 +341,7 @@ def main():
     for i in range(n):
         a[i] = int(lines[i].strip())
 
+    """
     instances = 50
     arr_size = 100
     arrs = [gen_a(arr_size) for i in range(instances)]
@@ -319,6 +349,7 @@ def main():
                  pre_repeated, pre_hill, pre_annealing]
     trials = 25
     nmax = 7
+    """
 
     if flag == 0:
         if alg == 0:
@@ -337,6 +368,7 @@ def main():
             print(pre_annealing(a, max_iter))
         else:
             print("Not a valid algorithm")
+    """
     elif flag == 1:
         graph_kk(instances, arr_size, arrs)
         graph(functions, instances, arr_size, arrs)
@@ -344,6 +376,11 @@ def main():
         graph_time(functions, trials, nmax)
     elif flag == 3:
         graph_scatter(functions, instances, arrs)
+    elif flag == 4:
+        print_times(functions)
+    elif flag == 5:
+        print_kk_time()
+    """
 
 
 main()
